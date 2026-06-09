@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>¡Mosquis! El Memory Geométrico de Springfield</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="./resources/favicon.ico">
-  
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <style>
         /* Estilos inspirados en Los Simpson */
-        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght=700&display=swap');
 
         :root {
             --amarillo-simpson: #FFD90F;
@@ -43,6 +38,7 @@
             box-shadow: 10px 10px 0px #000;
             text-align: center;
             box-sizing: border-box;
+            position: relative;
         }
 
         h1 {
@@ -92,11 +88,34 @@
             border: 3px solid #000;
             border-radius: 8px;
             margin: 5px;
-            background-white: #fff;
         }
 
+        /* Sistema de pantallas */
         .pantalla { display: none; }
         .activa { display: block; }
+
+        /* PANTALLA DE CARGA (NUEVA) */
+        #pantalla-carga {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .spinner-nuclear {
+            width: 60px;
+            height: 60px;
+            border: 8px solid #333;
+            border-top: 8px solid var(--amarillo-simpson);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+            box-shadow: 3px 3px 0px #000;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         .config-seccion {
             margin: 15px 0;
@@ -183,7 +202,6 @@
             visibility: hidden; 
         }
 
-        /* Ajuste específico para que las fórmulas LaTeX se vean grandes y centradas */
         .carta mjx-container {
             font-size: 1.1rem !important;
             margin: 0 !important;
@@ -205,11 +223,35 @@
             margin: 20px 0;
         }
     </style>
+
+    <script>
+        window.MathJax = {
+            startup: {
+                pageReady: () => {
+                    // Este código se ejecuta SOLO cuando MathJax está totalmente cargado y listo
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        document.getElementById('pantalla-carga').style.display = 'none';
+                        document.getElementById('pantalla-inicio').classList.add('activa');
+                    });
+                }
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
     <div class="container">
-        <div id="pantalla-inicio" class="pantalla activa">
+        
+        <div id="pantalla-carga">
+            <div class="zona-imagen">[Espacio para Imagen de Carga - Central Nuclear o Homer durmiendo]</div>
+            <div class="spinner-nuclear"></div>
+            <h2>¡Yuyu! Cargando el reactor de la Central Nuclear...</h2>
+            <p>Estamos preparando las fórmulas geométricas de LaTeX. ¡Un segundo de sensatez!</p>
+        </div>
+
+        <div id="pantalla-inicio" class="pantalla">
             <div class="zona-imagen">[Espacio para Imagen de Inicio - Los Simpson]</div>
             <h1>¡Multiplícate por cero! <br>El Memory de Geometría</h1>
             
@@ -230,9 +272,11 @@
 
             <button onclick="iniciarJuego()">¡Al tajo!</button>
 
+            <div class="config-seccion">
             <hr>
-            <p style="text-align:center; color: white; font-size: 12px;">Autor: Joaquín Candañedo.<br><a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="./resources/CC_BY_SA.png" alt="Creative Commons Reconocimiento - Compartir Igual"></a></p>
+            <Autor: Joaquín Candañedo.<br><a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="./resources/CC_BY_SA.png" alt="Creative Commons Reconocimiento - Compartir Igual"></a>
 
+            </div>
         </div>
 
         <div id="pantalla-juego" class="pantalla">
@@ -255,7 +299,7 @@
     </div>
 
     <script>
-        // Banco de datos con expresiones en formato LaTeX riguroso
+        // Banco de datos con expresiones en formato LaTeX
         const bancoFormulas = [
             { nombre: "Teorema de Pitágoras", expresion: "$$a^2 + b^2 = c^2$$" },
             { nombre: "Área del Triángulo", expresion: "$$A = \\frac{b \\cdot h}{2}$$" },
@@ -276,14 +320,11 @@
         let cartas = [];
         let cartasVolteadas = [];
         let bloqueado = false;
-        
-        // Variables del temporizador
         let intervaloTemporizador;
         let tiempoRestanteSegundos = 0;
 
-        window.onload = function() {
-            generarInputsGrupos();
-        };
+        // Se ejecuta para tener listos los inputs predeterminados en segundo plano
+        generarInputsGrupos();
 
         function generarInputsGrupos() {
             const num = document.getElementById('num-grupos').value;
@@ -303,7 +344,6 @@
         }
 
         function iniciarJuego() {
-            // Configurar grupos
             const inputs = document.querySelectorAll('.nombre-grupo');
             grupos = [];
             inputs.forEach(input => {
@@ -314,7 +354,6 @@
             cartasVolteadas = [];
             bloqueado = false;
 
-            // Configurar e iniciar temporizador
             const minutosSeleccionados = parseInt(document.getElementById('tiempo-limite').value);
             tiempoRestanteSegundos = minutosSeleccionados * 60;
             actualizarRelojGrafico();
@@ -331,138 +370,4 @@
             tiempoRestanteSegundos--;
             actualizarRelojGrafico();
 
-            if (tiempoRestanteSegundos <= 0) {
-                clearInterval(intervaloTemporizador);
-                alert("¡Se acabó el tiempo! ¡Al contenedor de las estadísticas de cabeza!");
-                finalizarJuego();
-            }
-        }
-
-        function actualizarRelojGrafico() {
-            const minutos = Math.floor(tiempoRestanteSegundos / 60);
-            const segundos = tiempoRestanteSegundos % 60;
-            document.getElementById('cuenta-atras').innerText = 
-                `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
-        }
-
-        function crearTablero() {
-            const contenedorTablero = document.getElementById('tablero');
-            contenedorTablero.innerHTML = '';
-
-            // Preparar baraja limpia
-            let baraja = [];
-            bancoFormulas.forEach((item, index) => {
-                baraja.push({ id: index, contenido: item.nombre, tipo: 'nombre' });
-                baraja.push({ id: index, contenido: item.expresion, tipo: 'expresion' });
-            });
-
-            // Recalcular posiciones aleatorias (Algoritmo de barajado efectivo)
-            baraja.sort(() => Math.random() - 0.5);
-            cartas = baraja;
-
-            // Renderizar cartas boca abajo
-            cartas.forEach((carta, index) => {
-                const elementoCarta = document.createElement('div');
-                elementoCarta.classList.add('carta');
-                elementoCarta.dataset.index = index;
-                elementoCarta.innerText = "❓"; 
-                elementoCarta.addEventListener('click', voltearCarta);
-                contenedorTablero.appendChild(elementoCarta);
-            });
-        }
-
-        function voltearCarta() {
-            if (bloqueado) return;
-            const index = this.dataset.index;
-            const cartaSeleccionada = cartas[index];
-
-            if (this.classList.contains('volteada') || this.classList.contains('emparejada')) return;
-
-            this.classList.add('volteada');
-            this.innerHTML = cartaSeleccionada.contenido;
-
-            // Si es una expresión matemática, forzar a MathJax a procesar el nuevo código LaTeX insertado
-            if (cartaSeleccionada.tipo === 'expresion') {
-                MathJax.typesetPromise([this]);
-            }
-
-            cartasVolteadas.push({ elemento: this, datos: cartaSeleccionada });
-
-            if (cartasVolteadas.length === 2) {
-                comprobarPareja();
-            }
-        }
-
-        function comprobarPareja() {
-            bloqueado = true;
-            const [c1, c2] = cartasVolteadas;
-
-            if (c1.datos.id === c2.datos.id && c1.datos.tipo !== c2.datos.tipo) {
-                // Acierto
-                setTimeout(() => {
-                    c1.elemento.classList.add('emparejada');
-                    c2.elemento.classList.add('emparejada');
-                    grupos[turnoActual].puntos++;
-                    cartasVolteadas = [];
-                    bloqueado = false;
-                    actualizarMarcadores();
-                    comprobarFinJuego();
-                }, 800);
-            } else {
-                // Fallo: Se vuelven a ocultar
-                setTimeout(() => {
-                    c1.elemento.classList.remove('volteada');
-                    c2.elemento.classList.remove('volteada');
-                    c1.elemento.innerHTML = "❓";
-                    c2.elemento.innerHTML = "❓";
-                    cartasVolteadas = [];
-                    bloqueado = false;
-                    
-                    turnoActual = (turnoActual + 1) % grupos.length;
-                    actualizarMarcadores();
-                }, 1500);
-            }
-        }
-
-        function actualizarMarcadores() {
-            document.getElementById('grupo-actual').innerText = grupos[turnoActual].nombre;
-            const contenedorPuntos = document.getElementById('puntuaciones-vivas');
-            contenedorPuntos.innerHTML = grupos.map(g => `${g.nombre}: <b>${g.puntos}</b>`).join(' | ');
-        }
-
-        function comprobarFinJuego() {
-            const cartasEmparejadas = document.querySelectorAll('.carta.emparejada').length;
-            if (cartasEmparejadas === cartas.length) {
-                clearInterval(intervaloTemporizador);
-                finalizarJuego();
-            }
-        }
-
-        function finalizarJuego() {
-            clearInterval(intervaloTemporizador); // Asegurar por si viene de tiempo agotado
-            const clasificacion = [...grupos].sort((a, b) => b.puntos - a.puntos);
-            
-            let textoGanador = "";
-            if (clasificacion.length > 1 && clasificacion[0].puntos === clasificacion[1].puntos) {
-                textoGanador = "¡Empate técnico! ¡Nadie se queda sin rosquilla! 🍩";
-            } else {
-                textoGanador = `¡El ganador es: ${clasificacion[0].nombre}! 🏆`;
-            }
-
-            document.getElementById('ganador-anuncio').innerText = textoGanador;
-
-            const lista = document.getElementById('lista-puntuaciones');
-            lista.innerHTML = '';
-            clasificacion.forEach((g, index) => {
-                lista.innerHTML += `<li>#${index + 1} <b>${g.nombre}</b> — Acertó ${g.puntos} parejas</li>`;
-            });
-
-            cambiarPantalla('pantalla-resultados');
-        }
-
-        function reiniciarJuego() {
-            cambiarPantalla('pantalla-inicio');
-        }
-    </script>
-</body>
-</html>
+            if (tiempoRestanteSegundos <= 0
