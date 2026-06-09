@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Geométrico de Springfield</title>
+    <link rel="icon" type="image/x-icon" href="./resources/favicon.ico">
+  
+    <style>
+        :root {
+            --amarillo-simpson: #FFD90F;
+            --azul-marge: #2997FF;
+            --rosa-donut: #FF69B4;
+            --blanco: #FFFFFF;
+        }
+
+        /* Tipografía Comic Sans nativa sin dependencias externas */
+        body {
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+            background-color: var(--azul-marge);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--blanco);
+            border: 5px solid #000;
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 950px;
+            box-shadow: 10px 10px 0px #000;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #000;
+            -webkit-text-stroke: 1px var(--amarillo-simpson);
+            font-size: 2.5rem;
+            margin-top: 0;
+        }
+
+        /* Estructura original con la imagen en la parte superior */
+        .zona-imagen {
+            width: 100%;
+            height: 130px;
+            background-color: #e0e0e0;
+            border: 3px dashed #000;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            color: #666;
+        }
+
+        button, select {
+            background-color: var(--amarillo-simpson);
+            color: #000;
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: 3px solid #000;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        input[type="text"], input[type="number"], select {
+            font-family: inherit;
+            padding: 8px;
+            font-size: 1rem;
+            border: 3px solid #000;
+            border-radius: 8px;
+            margin: 5px;
+            font-weight: bold;
+        }
+
+        .pantalla { display: none; }
+        .activa { display: block; }
+
+        .config-seccion {
+            margin: 15px 0;
+            padding: 10px;
+            border-bottom: 2px dashed #ccc;
+        }
+
+        #inputs-grupos {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .info-juego {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: var(--amarillo-simpson);
+            border: 3px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .turno-actual {
+            padding: 5px 15px;
+            border-radius: 5px;
+            border: 2px solid #000;
+            color: #fff;
+            text-shadow: 1px 1px 1px #000;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .reloj {
+            background-color: #fff;
+            padding: 5px 15px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #d9534f;
+        }
+
+        /* Modificado a 6 columnas para distribuir perfectamente las 24 celdas (6x4) */
+        .tablero {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 750px) {
+            .tablero { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 500px) {
+            .tablero { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* Celdas originales en Rosa Donut */
+        .carta {
+            height: 110px;
+            background-color: var(--rosa-donut);
+            border: 3px solid #000;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: bold;
+            padding: 5px;
+            box-shadow: 3px 3px 0px #000;
+            user-select: none;
+            text-align: center;
+            box-sizing: border-box;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        .carta.volteada {
+            background-color: var(--blanco);
+            color: #000;
+        }
+
+        .carta.emparejada {
+            background-color: #87CEEB;
+            visibility: hidden; 
+        }
+
+        .carta math {
+            font-size: 1.2rem;
+        }
+
+        .lista-resultados {
+            list-style: none;
+            padding: 0;
+            font-size: 1.4rem;
+        }
+        .lista-resultados li {
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 2px dashed #000;
+        }
+        .ganador {
+            font-size: 2rem;
+            color: #d9534f;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="pantalla-inicio" class="pantalla activa">
+            <div class="zona-imagen">[Espacio para Imagen de Inicio - Los Simpson]</div>
+            <h1>¡Multiplícate por cero! <br>El Memory de Geometría</h1>
+
+            <div class="config-seccion">
+               <h3>📜 Normas del Juego</h3>
+               <ul>
+                 <li><b>Objetivo:</b> Encontrar las parejas uniendo el <b>Nombre de la figura</b> con su correspondiente <b>fórmula matemática</b>.</li>
+                 <li><b>Turnos:</b> Los equipos juegan de forma consecutiva. El bloque indicador cambiará de fondo adoptando el color de vuestro equipo.</li>
+                 <li><b>Mecánica:</b> Si acertáis una pareja, <b>sumáis 1 punto y seguís jugando</b>. Si falláis, las cartas se ocultan y pasa el turno.</li>
+               </ul>
+            </div>
+          
+            <div class="config-seccion">
+                <label><b>Tiempo máximo de juego:</b></label>
+                <select id="tiempo-limite">
+                    <option value="10">10 Minutos</option>
+                    <option value="30">30 Minutos</option>
+                    <option value="60">60 Minutos</option>
+                </select>
+            </div>
+
+            <div class="config-seccion">
+                <label><b>Cantidad de equipos:</b></label>
+                <input type="number" id="num-grupos" min="1" max="6" value="2" onchange="generarInputsGrupos()">
+                <div id="inputs-grupos"></div>
+            </div>
+
+            <button onclick="iniciarJuego()">¡Al tajo!</button>
+          
+            <div class="config-seccion">
+              Autor: Joaquín Candañedo.<br><a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="./resources/CC_BY_SA.png" alt="Creative Commons Reconocimiento - Compartir Igual"></a>
+            </div>
+        </div>
+
+        <div id="pantalla-juego" class="pantalla">
+            <div class="zona-imagen">[Espacio para Imagen de Juego - Aula de Bart]</div>
+            <div class="info-juego">
+                <div id="marcador-turnos">Turno de: <span id="grupo-actual" class="turno-actual">-</span></div>
+                <div class="reloj">Tiempo: <span id="cuenta-atras">00:00</span></div>
+                <div id="puntuaciones-vivas"></div>
+            </div>
+            <div class="tablero" id="tablero"></div>
+        </div>
+
+        <div id="pantalla-resultados" class="pantalla">
+            <div class="zona-imagen">[Espacio para Imagen de Fin - Celebración]</div>
+            <h1>Resultados Finales</h1>
+            <div id="ganador-anuncio" class="ganador"></div>
+            <ul id="lista-puntuaciones" class="lista-resultados"></ul>
+            <button onclick="reiniciarJuego()">¿Otro examen de reválida? (Volver a jugar)</button>
+        </div>
+    </div>
+
+    <script>
+        // Banco de datos COMPLETO (12 parejas = 24 celdas) optimizado con MathML
+        const bancoFormulas = [
+            { nombre: "Teorema de Pitágoras", expresion: `<math><msup><mi>a</mi><mn>2</mn></msup><mo>+</mo><msup><mi>b</mi><mn>2</mn></msup><mo>=</mo><msup><mi>c</mi><mn>2</mn></msup></math>` },
+            { nombre: "Área del Triángulo", expresion: `<math><mi>A</mi><mo>=</mo><mfrac><mrow><mi>b</mi><mo>·</mo><mi>h</mi></mrow><mn>2</mfrac></math>` },
+            { nombre: "Área del Círculo", expresion: `<math><mi>A</mi><mo>=</mo><mi>π</mi><mo>·</mo><msup><mi>r</mi><mn>2</mn></msup></math>` },
+            { nombre: "Longitud de la Circunferencia", expresion: `<math><mi>L</mi><mo>=</mo><mn>2</mn><mo>·</mo><mi>π</mi><mo>·</mo><mi>r</mi></math>` },
+            { nombre: "Área del Trapecio", expresion: `<math><mi>A</mi><mo>=</mo><mfrac><mrow><mo>(</mo><mi>B</mi><mo>+</mo><mi>b</mi><mo>)</mo><mo>·</mo><mi>h</mi></mrow><mn>2</mn></mfrac></math>` },
+            { nombre: "Área de Polígono Regular", expresion: `<math><mi>A</mi><mo>=</mo><mfrac><mrow><mi>P</mi><mo>·</mo><mi>a</mi></mrow><mn>2</mn></mfrac></math>` },
+            { nombre: "Volumen del Cilindro", expresion: `<math><mi>V</mi><mo>=</mo><mi>π</mi><mo>·</mo><msup><mi>r</mi><mn>2</mn></msup><mo>·</mo><mi>h</mi></math>` },
+            { nombre: "Volumen del Cono", expresion: `<math><mi>V</mi><mo>=</mo><mfrac><mrow><mi>π</mi><mo>·</mo><msup><mi>r</mi><mn>2</mn></msup><mo>·</mo><mi>h</mi></mrow><mn>3</mn></mfrac></math>` },
+            { nombre: "Volumen de la Esfera", expresion: `<math><mi>V</mi><mo>=</mo><mfrac><mn>4</mn><mn>3</mn></mfrac><mo>·</mo><mi>π</mi><mo>·</mo><msup><mi>r</mi><mn>3</mn></msup></math>` },
+            { nombre: "Teorema de Tales", expresion: `<math><mfrac><mi>a</mi><mi>b</mi></mfrac><mo>=</mo><mfrac><msup><mi>a</mi><mo>′</mo></msup><msup><mi>b</mi><mo>′</mo></msup></mfrac></math>` },
+            { nombre: "Ecuación de la Recta", expresion: `<math><mi>y</mi><mo>=</mo><mi>m</mi><mi>x</mi><mo>+</mo><mi>n</mi></math>` },
+            { nombre: "Punto Medio", expresion: `<math><mo>(</mo><mfrac><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>x</mi><mn>2</mn></msub></mrow><mn>2</mn></mfrac><mo>,</mo><mfrac><mrow><msub><mi>y</mi><mn>1</mn></msub><mo>+</mo><msub><mi>y</mi><mn>2</mn></msub></mrow><mn>2</mn></mfrac><mo>)</mo></math>` }
+        ];
+
+        const coloresEquipos = ["#107DC0", "#F14E28", "#76D72F", "#F05E2F", "#8470FF", "#424F46"];
+
+        let grupos = [];
+        let turnoActual = 0;
+        let cartas = [];
+        let cartasVolteadas = [];
+        let bloqueado = false;
+        let intervaloTemporizador;
+        let tiempoRestanteSegundos = 0;
+
+        window.onload = function() {
+            generarInputsGrupos();
+        };
+
+        function generarInputsGrupos() {
+            const numInput = document.getElementById('num-grupos');
+            const contenedor = document.getElementById('inputs-grupos');
+            
+            if (numInput && contenedor) {
+                const num = parseInt(numInput.value) || 2;
+                contenedor.innerHTML = '';
+                for (let i = 1; i <= num; i++) {
+                    const colorActual = coloresEquipos[(i - 1) % coloresEquipos.length];
+                    contenedor.innerHTML += `<div>
+                        <span style="color:${colorActual}; font-size:1.2rem; margin-right:5px;">■</span>
+                        <label>Grupo ${i}: </label>
+                        <input type="text" class="nombre-grupo" value="Equipo ${i}">
+                    </div>`;
+                }
+            }
+        }
+
+        function cambiarPantalla(id) {
+            document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+            const p = document.getElementById(id);
+            if(p) p.classList.add('activa');
+        }
+
+        function iniciarJuego() {
+            const inputs = document.querySelectorAll('.nombre-grupo');
+            grupos = [];
+            inputs.forEach((input, index) => {
+                grupos.push({ 
+                    nombre: input.value, 
+                    puntos: 0,
+                    color: coloresEquipos[index % coloresEquipos.length]
+                });
+            });
+
+            turnoActual = 0;
+            cartasVolteadas = [];
+            bloqueado = false;
+
+            const minutosSeleccionados = parseInt(document.getElementById('tiempo-limite').value);
+            tiempoRestanteSegundos = minutosSeleccionados * 60;
+            actualizarRelojGrafico();
+            
+            clearInterval(intervaloTemporizador);
+            intervaloTemporizador = setInterval(controlarTiempo, 1000);
+            
+            actualizarMarcadores();
+            crearTablero();
+            cambiarPantalla('pantalla-juego');
+        }
+
+        function controlarTiempo() {
+            tiempoRestanteSegundos--;
+            actualizarRelojGrafico();
+
+            if (tiempoRestanteSegundos <= 0) {
+                clearInterval(intervaloTemporizador);
+                alert("¡Se acabó el tiempo! ¡Al contenedor de las estadísticas de cabeza!");
+                finalizarJuego();
+            }
+        }
+
+        function actualizarRelojGrafico() {
+            const minutes = Math.floor(tiempoRestanteSegundos / 60);
+            const seconds = tiempoRestanteSegundos % 60;
+            document.getElementById('cuenta-atras').innerText = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function crearTablero() {
+            const contenedorTablero = document.getElementById('tablero');
+            contenedorTablero.innerHTML = '';
+
+            let baraja = [];
+            bancoFormulas.forEach((item, index) => {
+                baraja.push({ id: index, contenido: item.nombre, tipo: 'nombre' });
+                baraja.push({ id: index, contenido: item.expresion, tipo: 'expresion' });
+            });
+
+            /* ALGORITMO FISHER-YATES: Aleatoriedad real garantizada paso a paso */
+            for (let i = baraja.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [baraja[i], baraja[j]] = [baraja[j], baraja[i]];
+            }
+            cartas = baraja;
+
+            cartas.forEach((carta, index) => {
+                const elementoCarta = document.createElement('div');
+                elementoCarta.classList.add('carta');
+                elementoCarta.dataset.index = index;
+                elementoCarta.innerText = "❓"; 
+                elementoCarta.addEventListener('click', voltearCarta);
+                contenedorTablero.appendChild(elementoCarta);
+            });
+        }
+
+        function voltearCarta() {
+            if (bloqueado) return;
+            const index = this.dataset.index;
+            const cartaSeleccionada = cartas[index];
+
+            if (this.classList.contains('volteada') || this.classList.contains('emparejada')) return;
+
+            this.classList.add('volteada');
+            this.innerHTML = cartaSeleccionada.contenido;
+
+            cartasVolteadas.push({ elemento: this, datos: cartaSeleccionada });
+
+            if (cartasVolteadas.length === 2) {
+                comprobarPareja();
+            }
+        }
+
+        function comprobarPareja() {
+            bloqueado = true;
+            const [c1, c2] = cartasVolteadas;
+
+            if (c1.datos.id === c2.datos.id && c1.datos.tipo !== c2.datos.tipo) {
+                setTimeout(() => {
+                    c1.elemento.classList.add('emparejada');
+                    c2.elemento.classList.add('emparejada');
+                    grupos[turnoActual].puntos++;
+                    cartasVolteadas = [];
+                    bloqueado = false;
+                    actualizarMarcadores();
+                    comprobarFinJuego();
+                }, 800);
+            } else {
+                setTimeout(() => {
+                    c1.elemento.classList.remove('volteada');
+                    c2.elemento.classList.remove('volteada');
+                    c1.elemento.innerHTML = "❓";
+                    c2.elemento.innerHTML = "❓";
+                    cartasVolteadas = [];
+                    bloqueado = false;
+                    
+                    turnoActual = (turnoActual + 1) % grupos.length;
+                    actualizarMarcadores();
+                }, 1500);
+            }
+        }
+
+        function actualizarMarcadores() {
+            const grupoActivo = grupos[turnoActual];
+            const spanTurno = document.getElementById('grupo-actual');
+            
+            // Cambia dinámicamente el fondo de la caja de turnos según el color del equipo
+            spanTurno.innerText = grupoActivo.nombre;
+            spanTurno.style.backgroundColor = grupoActivo.color;
+
+            // Marcador continuo en la barra superior personalizado con bordes inferiores coloreados
+            const contenedorPuntos = document.getElementById('puntuaciones-vivas');
+            contenedorPuntos.innerHTML = grupos.map(g => 
+                `<span style="border-bottom: 4px solid ${g.color}; padding-bottom: 2px; margin: 0 10px; display: inline-block;">
+                    ${g.nombre}: <b>${g.puntos}</b>
+                </span>`
+            ).join(' ');
+        }
+
+        function comprobarFinJuego() {
+            const cartasEmparejadas = document.querySelectorAll('.carta.emparejada').length;
+            if (cartasEmparejadas === cartas.length) {
+                clearInterval(intervaloTemporizador);
+                finalizarJuego();
+            }
+        }
+
+        function finalizarJuego() {
+            clearInterval(intervaloTemporizador);
+            const clasificacion = [...grupos].sort((a, b) => b.puntos - a.puntos);
+            
+            let textoGanador = "";
+            const anuncio = document.getElementById('ganador-anuncio');
+            
+            if (clasificacion.length > 1 && clasificacion[0].puntos === clasificacion[1].puntos) {
+                textoGanador = "¡Empate técnico! ¡Nadie se queda sin rosquilla! 🍩";
+                anuncio.style.color = "#000";
+            } else {
+                textoGanador = `¡El ganador es: ${clasificacion[0].nombre}! 🏆`;
+                anuncio.style.color = clasificacion[0].color;
+            }
+
+            anuncio.innerText = textoGanador;
+
+            const lista = document.getElementById('lista-puntuaciones');
+            lista.innerHTML = '';
+            clasificacion.forEach((g, index) => {
+                lista.innerHTML += `<li style="color:${g.color}; font-weight:bold;">
+                    #${index + 1} <b>${g.nombre}</b> — Acertó ${g.puntos} parejas
+                </li>`;
+            });
+
+            cambiarPantalla('pantalla-resultados');
+        }
+
+        function reiniciarJuego() {
+            cambiarPantalla('pantalla-inicio');
+            generarInputsGrupos();
+        }
+    </script>
+</body>
+</html>
