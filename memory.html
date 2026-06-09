@@ -265,13 +265,16 @@
         let tiempoRestanteSegundos = 0;
 
         window.onload = function() {
-            generarInputsGrupos();
+            // Asegura que los inputs se generen tanto al cargar de cero como al reiniciar
+            setTimeout(generarInputsGrupos, 100); 
         };
-
+        
         function generarInputsGrupos() {
-            const num = document.getElementById('num-grupos').value;
+            const numInput = document.getElementById('num-grupos');
             const contenedor = document.getElementById('inputs-grupos');
-            if(contenedor) {
+            
+            if (numInput && contenedor) {
+                const num = numInput.value;
                 contenedor.innerHTML = '';
                 for (let i = 1; i <= num; i++) {
                     contenedor.innerHTML += `<div>
